@@ -77,14 +77,14 @@ function Pages({ pages, title, orphan }: { pages: SplitPages; title: string; orp
   return (
     <div className="split-pages">
       <h5>{title}</h5>
-      <div className={`split-page ${pages.parent}`}>
+      <div className={`split-page ${pages.parent}`} data-flip="split-P" data-flip-state={pages.parent}>
         <span className="name">P</span> {PAGE_TEXT.parent[pages.parent]}
       </div>
       <div className="split-children">
-        <div className={`split-page ${pages.left}`}>
+        <div className={`split-page ${pages.left}`} data-flip="split-L" data-flip-state={pages.left}>
           <span className="name">L</span> {PAGE_TEXT.left[pages.left]}
         </div>
-        <div className={`split-page ${pages.right} ${orphan ? 'orphan' : ''}`}>
+        <div className={`split-page ${pages.right} ${orphan ? 'orphan' : ''}`} data-flip="split-R" data-flip-state={pages.right} data-flip-from="split-L">
           <span className="name">R</span> {PAGE_TEXT.right[pages.right]}
           {orphan && <em> orphan</em>}
         </div>
@@ -163,7 +163,7 @@ export function WalCrashWidget() {
         <div className={`split-compare phase-${frame.phase}`}>
           <Pages pages={pages} title={PHASE_TITLE[frame.phase]} orphan={orphan} />
           {withWal && (
-            <div className={`split-pages wal-box wal-${frame.wal}`}>
+            <div className={`split-pages wal-box wal-${frame.wal}`} data-flip="split-WAL" data-flip-state={frame.wal}>
               <h5>WAL</h5>
               <p className="small">{WAL_TEXT[frame.wal]}</p>
             </div>

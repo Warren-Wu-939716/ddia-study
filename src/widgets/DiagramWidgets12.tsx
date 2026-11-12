@@ -105,7 +105,7 @@ export function TwoClocksWidget() {
               </text>
             </g>
           ))}
-          {frame && frame.now > 0 && <line x1={x(frame.now)} y1={TOP - 14} x2={x(frame.now)} y2={BOTTOM + 8} className="now" />}
+          {frame && frame.now > 0 && <line x1={x(frame.now)} y1={TOP - 14} x2={x(frame.now)} y2={BOTTOM + 8} className="now" data-flip="now" />}
           {CLOCK_EVENTS.filter((e) => processed.includes(e.id)).map((e) => {
             const lag = e.processed - e.happened;
             const late = CLOCK_EVENTS.some((o) => o.happened > e.happened && o.processed < e.processed);
@@ -124,7 +124,7 @@ export function TwoClocksWidget() {
             return (
               <g key={e.id}>
                 {happened.includes(e.id) && (
-                  <g className={`${cls} ${stuck ? 'stuck' : ''}`}>
+                  <g className={`${cls} ${stuck ? 'stuck' : ''}`} data-flip={`happened:${e.id}`}>
                     <circle cx={x(e.happened)} cy={TOP} r={6} />
                     <text x={x(e.happened)} y={TOP - 11} textAnchor="middle" className="ev-label">
                       {e.id}
@@ -132,7 +132,7 @@ export function TwoClocksWidget() {
                   </g>
                 )}
                 {processed.includes(e.id) && (
-                  <g className={cls}>
+                  <g className={cls} data-flip={`processed:${e.id}`} data-flip-from={`happened:${e.id}`}>
                     <circle cx={x(e.processed)} cy={BOTTOM} r={6} />
                     <text x={x(e.processed)} y={BOTTOM + 20} textAnchor="middle" className="ev-label">
                       {e.id}

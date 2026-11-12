@@ -79,7 +79,7 @@ export function SparseIndexWidget() {
                     const order = opened ? frame.scanned.indexOf(k) : -1;
                     const hit = opened && frame.found && k === frame.scanned.at(-1);
                     return (
-                      <span key={k} className={`key ${order >= 0 ? 'scanned' : ''} ${hit ? 'found' : ''}`}>
+                      <span key={k} className={`key ${order >= 0 ? 'scanned' : ''} ${hit ? 'found' : ''}`} data-flip={`sst:${k}`}>
                         {order >= 0 && <sup>{order + 1}</sup>}
                         {k}
                       </span>
@@ -225,6 +225,7 @@ export function MergeWidget() {
                 <span
                   key={entry.key}
                   className={`cell ${i < heads[r] && !candidate ? 'consumed' : ''} ${i === heads[r] && frame ? 'head' : ''} ${role} ${entry.value === null ? 'tomb' : ''}`}
+                  data-flip={`in${r}:${entry.key}`}
                 >
                   {show(entry)}
                 </span>
@@ -235,7 +236,12 @@ export function MergeWidget() {
         <div className="merge-row output">
           <span className="merge-label">output</span>
           {output.map((entry, i) => (
-            <span key={entry.key} className={`cell out ${entry.value === null ? 'tomb' : ''} ${frame?.phase === 'emit' && i === output.length - 1 && frame.candidates[0]?.entry === entry ? 'fresh' : ''}`}>
+            <span
+              key={entry.key}
+              className={`cell out ${entry.value === null ? 'tomb' : ''} ${frame?.phase === 'emit' && i === output.length - 1 && frame.candidates[0]?.entry === entry ? 'fresh' : ''}`}
+              data-flip={`out:${entry.key}`}
+              data-flip-from={`in${RUNS.findIndex((run) => run.includes(entry))}:${entry.key}`}
+            >
               {show(entry)}
             </span>
           ))}

@@ -7,12 +7,14 @@ export function Bits({ bits, label, current = false }: { bits: readonly number[]
       <span className="bitmap-label mono">{label}</span>
       <span className="bitmap" aria-label={`${label}: ${bits.join('')}`}>
         {bits.map((b, i) => (
-          <span key={i} className={b ? 'on' : ''}>
+          <span key={i} className={b ? 'on' : ''} data-flip={`${label}:${i}`} data-flip-state={String(b)}>
             {b}
           </span>
         ))}
       </span>
-      <span className="muted small mono">runs: {bitmapRunLengths(bits).join(', ')}</span>
+      <span className="muted small mono" data-flip={`${label}:runs`}>
+        runs: {bitmapRunLengths(bits).join(', ')}
+      </span>
     </div>
   );
 }

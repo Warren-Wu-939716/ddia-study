@@ -8,6 +8,12 @@ export interface Chip {
   tone?: Tone;
   /** Small label shown before the text, such as an offset or a time. */
   tag?: string;
+  /** Identity across steps (defaults to the text): the same id in another box animates as a move or copy. */
+  id?: string;
+  /** Box or chip id a newly appearing chip flies in from. */
+  from?: string;
+  /** Box or chip id a disappearing chip flies into. */
+  to?: string;
 }
 
 export interface Box {

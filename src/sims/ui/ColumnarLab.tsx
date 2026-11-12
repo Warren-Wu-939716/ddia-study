@@ -92,12 +92,16 @@ export function ColumnarLab() {
             <div className="bar-row">
               <span>Row store</span>
               <span className="bar" style={{ width: '100%' }} />
-              <span className="mono">{formatBytes(bytes.row)}</span>
+              <span className="mono" data-flip="bytes-row">
+                {formatBytes(bytes.row)}
+              </span>
             </div>
             <div className="bar-row">
               <span>Column store</span>
               <span className="bar column" style={{ width: `${Math.max(0.5, (bytes.column / bytes.row) * 100)}%` }} />
-              <span className="mono">{formatBytes(bytes.column)}</span>
+              <span className="mono" data-flip="bytes-column">
+                {formatBytes(bytes.column)}
+              </span>
             </div>
           </div>
           <p className="muted small">
@@ -129,22 +133,29 @@ export function ColumnarLab() {
           <div className="columns-view">
             {SALES_COLUMNS.map((column) => {
               const runs = runsPerColumn[column];
+              const values = columnValues(sorted, column);
+              const runOf = values.map((_, k) => values.slice(0, k + 1).filter((v, j) => j > 0 && v !== values[j - 1]).length);
               return (
                 <div key={column} className={`column-file ${sortKeys[0] === column ? 'primary-sort' : ''}`}>
                   <div className="column-head">
                     <span className="mono">{column}</span>
-                    <span className="small muted">{runs.length} runs</span>
+                    <span className="small muted" data-flip={`${column}:runs`}>
+                      {runs.length} runs
+                    </span>
                   </div>
                   <ol>
-                    {runs.flatMap((run, r) =>
-                      Array.from({ length: run.length }, (_, i) => (
-                        <li key={`${r}-${i}`} className={`${r % 2 ? 'alt' : ''} ${i === 0 ? 'run-start' : ''}`}>
-                          {run.value}
+                    {sorted.map((row, k) => {
+                      const start = k === 0 || values[k] !== values[k - 1];
+                      // Keyed by the row, so re-sorting slides each value to its new position.
+                      const id = SALES.indexOf(row);
+                      return (
+                        <li key={id} className={`${runOf[k] % 2 ? 'alt' : ''} ${start ? 'run-start' : ''}`} data-flip={`${column}:${id}`}>
+                          {values[k]}
                         </li>
-                      )),
-                    )}
+                      );
+                    })}
                   </ol>
-                  <p className="mono small rle" title="run-length encoding">
+                  <p className="mono small rle" title="run-length encoding" data-flip={`${column}:rle`}>
                     {runs.map((r) => `${r.value}×${r.length}`).join(' ')}
                   </p>
                 </div>
@@ -195,7 +206,10 @@ export function ColumnarLab() {
             )}
           </div>
           <p className="small">
-            Matching rows: <span className="mono">{evaluation.matchingRows.length ? evaluation.matchingRows.map((r) => `#${r}`).join(', ') : 'none'}</span>
+            Matching rows:{' '}
+            <span className="mono" data-flip="matching-rows">
+              {evaluation.matchingRows.length ? evaluation.matchingRows.map((r) => `#${r}`).join(', ') : 'none'}
+            </span>
           </p>
           <p className="muted small">Bitmaps follow the current sort order from panel 2. Run lengths alternate zeros, ones, zeros… (trailing zeros omitted).</p>
         </section>

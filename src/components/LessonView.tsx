@@ -2,6 +2,7 @@ import { Link } from 'react-router';
 import { getLab } from '../content/index.ts';
 import type { Lesson, LessonBlock } from '../content/types.ts';
 import { WIDGETS } from '../widgets/registry.ts';
+import { Flip } from './Flip.tsx';
 import { RichText } from './RichText.tsx';
 
 function Block({ block }: { block: LessonBlock }) {
@@ -115,7 +116,9 @@ function Block({ block }: { block: LessonBlock }) {
             <h3>{block.title}</h3>
           </header>
           {block.body && <RichText text={block.body} />}
-          <Widget />
+          <Flip>
+            <Widget />
+          </Flip>
         </section>
       );
     }

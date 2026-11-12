@@ -110,16 +110,27 @@ export function IndexHopsWidget() {
           const active = step >= 0 && step <= shownUpTo;
           return (
             <div key={s} className={`hop-box ${active ? 'active' : ''} ${frame?.hop === step ? 'current' : ''} ${layout === 'clustered' && s === 'heap' ? 'unused' : ''}`}>
-              {active && <span className="hop-badge">{step + 1}</span>}
+              {active && (
+                <span className="hop-badge" data-flip={`hop-badge-${s}`}>
+                  {step + 1}
+                </span>
+              )}
               <strong>{STRUCTURE_NAMES[s]}</strong>
               <code>{structureContent(s, layout)}</code>
+              {frame && frame.hop === step && (
+                <span className="hop-token" data-flip="hop-token">
+                  ▶ lookup is here
+                </span>
+              )}
             </div>
           );
         })}
       </div>
       <ol className="hop-notes">
         {hops.slice(0, shownUpTo + 1).map((h, i) => (
-          <li key={i}>{h.note}</li>
+          <li key={i} data-flip={`note${i}`}>
+            {h.note}
+          </li>
         ))}
       </ol>
       <StepControls
@@ -216,8 +227,13 @@ export function PhoneBookWidget() {
             outside ? 'outside' : '',
           ];
           return (
-            <li key={i} className={classes.join(' ')}>
+            <li key={i} className={classes.join(' ')} data-flip={`pb${i}`} data-flip-state={matches.includes(i) ? 'match' : ''}>
               <span className="mono muted">{String(i + 1).padStart(2, '0')}</span> {p.last}, {p.first}
+              {frame?.probe === i && (
+                <span className="pb-probe" data-flip="pb-probe">
+                  ◀ checking
+                </span>
+              )}
             </li>
           );
         })}
@@ -303,12 +319,22 @@ export function MapRangeWidget() {
         </button>
       </div>
       <svg className="map" viewBox={`0 0 ${MAP_W} ${MAP_H}`} onClick={onClick} role="img" aria-label={`${matches.length} restaurants in view, ${scanned.length} scanned`}>
-        {strategy === 'lat' && <rect className="stripe" x={0} y={box.y0} width={MAP_W} height={BOX_H} />}
-        {strategy === 'lon' && <rect className="stripe" x={box.x0} y={0} width={BOX_W} height={MAP_H} />}
-        <rect className="view-box" x={box.x0} y={box.y0} width={BOX_W} height={BOX_H} />
+        {strategy === 'lat' && <rect className="stripe" x={0} y={box.y0} width={MAP_W} height={BOX_H} data-flip="stripe-lat" />}
+        {strategy === 'lon' && <rect className="stripe" x={box.x0} y={0} width={BOX_W} height={MAP_H} data-flip="stripe-lon" />}
+        <rect className="view-box" x={box.x0} y={box.y0} width={BOX_W} height={BOX_H} data-flip="view-box" />
         {POINTS.map((p) => {
           const match = filtered && matchIds.has(p.id);
-          return <circle key={p.id} cx={p.x} cy={p.y} r={match ? 4 : 3} className={match ? 'pt match' : scannedIds.has(p.id) ? 'pt scanned' : 'pt'} />;
+          return (
+            <circle
+              key={p.id}
+              cx={p.x}
+              cy={p.y}
+              r={match ? 4 : 3}
+              className={match ? 'pt match' : scannedIds.has(p.id) ? 'pt scanned' : 'pt'}
+              data-flip={`pt${p.id}`}
+              data-flip-state={match ? 'match' : scannedIds.has(p.id) ? 'scanned' : ''}
+            />
+          );
         })}
         <text x={MAP_W - 4} y={MAP_H - 4} textAnchor="end" className="axis">
           longitude →
@@ -379,7 +405,12 @@ export function InvertedIndexWidget() {
       </form>
       <ol className="docs">
         {DOCS.map((doc, i) => (
-          <li key={i} className={`${combined && result[i] ? 'match' : ''} ${currentPostings.includes(i + 1) ? 'posting' : ''}`}>
+          <li
+            key={i}
+            className={`${combined && result[i] ? 'match' : ''} ${currentPostings.includes(i + 1) ? 'posting' : ''}`}
+            data-flip={`doc${i}`}
+            data-flip-state={`${combined && result[i] ? 'match' : ''}${currentPostings.includes(i + 1) ? 'posting' : ''}`}
+          >
             <span className="mono muted">doc {i + 1}</span> {doc}
           </li>
         ))}
@@ -416,7 +447,7 @@ export function InvertedIndexWidget() {
                   <strong>{terms.length ? terms.join(` ${mode.toUpperCase()} `) : '(type a query)'}</strong>
                 </td>
                 <td className="mono">
-                  <strong>{result.join(' ')}</strong>
+                  <strong data-flip="result-bits">{result.join(' ')}</strong>
                 </td>
               </tr>
             )}
@@ -471,7 +502,7 @@ export function FuzzyWidget() {
           <div key={row} className="trigram-row">
             <span className="mono">{word}</span>
             {grams.map((g) => (
-              <span key={g} className={`chip-static ${shared.includes(g) ? 'shared' : ''}`}>
+              <span key={g} className={`chip-static ${shared.includes(g) ? 'shared' : ''}`} data-flip={`${row}:${g}`} data-flip-state={shared.includes(g) ? 'shared' : ''}>
                 {g}
               </span>
             ))}

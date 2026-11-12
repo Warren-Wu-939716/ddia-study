@@ -1,6 +1,7 @@
 import { useLiveQuery } from 'dexie-react-hooks';
 import type { ComponentType } from 'react';
 import { Link, useParams } from 'react-router';
+import { Flip } from '../components/Flip.tsx';
 import { getChapter, getLab, LABS } from '../content/index.ts';
 import type { LabId } from '../content/types.ts';
 import { db } from '../lib/db.ts';
@@ -64,7 +65,9 @@ export function LabPage() {
       </p>
       <h1>{lab.title}</h1>
       <p className="lead">{lab.blurb}</p>
-      <Lab key={lab.id} />
+      <Flip key={lab.id}>
+        <Lab />
+      </Flip>
     </div>
   );
 }

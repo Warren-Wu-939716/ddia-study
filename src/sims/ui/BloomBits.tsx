@@ -10,6 +10,8 @@ export function BloomBits({ bits, frame }: { bits: readonly number[]; frame?: Bl
         <span
           key={i}
           className={[bit ? 'on' : '', frame?.positions.includes(i) ? 'probe' : '', visited.has(i) ? 'visited' : '', current === i ? 'current' : '', frame?.zero === i ? 'zero' : ''].join(' ')}
+          data-flip={`bit${i}`}
+          data-flip-state={bit ? 'on' : 'off'}
         >
           {i}
         </span>

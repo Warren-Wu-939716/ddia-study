@@ -14,6 +14,7 @@ import {
   type ProblemStatus,
 } from '../lib/problems.ts';
 import { recordProblemAttempt } from '../lib/repo.ts';
+import { Flip } from './Flip.tsx';
 import { RichText } from './RichText.tsx';
 import { Segmented } from './Segmented.tsx';
 
@@ -114,7 +115,7 @@ function OrderList({ problem, order, onChange, revealed }: { problem: OrderProbl
     <div className="problem-order">
       <ol ref={listRef}>
         {order.map((step, i) => (
-          <li key={step} className={revealed ? (step === i ? 'correct' : 'wrong') : ''}>
+          <li key={step} data-flip={`step-${step}`} className={revealed ? (step === i ? 'correct' : 'wrong') : ''}>
             <span className="problem-order-text">
               <RichText text={problem.steps[step]} inline />
             </span>
@@ -251,7 +252,11 @@ function ProblemCard({
       );
       break;
     case 'order':
-      input = <OrderList problem={problem} order={order} onChange={setOrder} revealed={revealed} />;
+      input = (
+        <Flip>
+          <OrderList problem={problem} order={order} onChange={setOrder} revealed={revealed} />
+        </Flip>
+      );
       break;
     case 'numeric':
       input = (

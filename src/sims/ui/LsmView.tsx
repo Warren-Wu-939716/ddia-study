@@ -26,7 +26,7 @@ export function LsmView({ frame, details = false }: LsmViewProps) {
         <h4>
           WAL <span className="muted small">disk · append-only</span>
         </h4>
-        <EntryList entries={state.wal} highlightIndex={focus?.wal} />
+        <EntryList entries={state.wal} highlightIndex={focus?.wal} flipId={(_, i) => `wal:${i}`} />
       </section>
       <section className={`panel ${memOutcome ? `step-${memOutcome.outcome}` : ''}`}>
         <h4>
@@ -35,7 +35,7 @@ export function LsmView({ frame, details = false }: LsmViewProps) {
             memory · sorted · {state.memtable.length}/{state.config.memtableLimit}
           </span>
         </h4>
-        <EntryList entries={state.memtable} highlight={focus?.memKey} />
+        <EntryList entries={state.memtable} highlight={focus?.memKey} flipFrom={focus?.wal !== undefined ? `wal:${focus.wal}` : undefined} />
         {frozen && (
           <div className="frozen-memtable">
             <h5>frozen · being written to disk</h5>
@@ -68,7 +68,7 @@ export function LsmView({ frame, details = false }: LsmViewProps) {
             ].join(' ');
             return (
               <div key={segment.id} className={classes}>
-                <div className="segment-head">
+                <div className="segment-head" data-flip={`seg${segment.id}`}>
                   <strong>#{segment.id}</strong>
                   {details && (
                     <span className="muted small">
@@ -77,7 +77,7 @@ export function LsmView({ frame, details = false }: LsmViewProps) {
                   )}
                   {outcome && <span className="small step-note">{OUTCOME_LABEL[outcome.outcome]}</span>}
                 </div>
-                <div className={`bloom-strip ${probe ? 'probing' : ''}`} aria-label="Bloom filter bits">
+                <div className={`bloom-strip ${probe ? 'probing' : ''}`} aria-label="Bloom filter bits" data-flip={`bloom${segment.id}`}>
                   {segment.bloom.bits.map((bit, i) => (
                     <span key={i} title={`bit ${i}`} className={`${bit ? 'on' : ''} ${probe?.includes(i) ? 'probe' : ''}`} />
                   ))}

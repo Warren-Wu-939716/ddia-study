@@ -173,7 +173,7 @@ export function AppendLogWidget({ withIndex = false, allowCrash = false }: Appen
                 frame?.hit === i || frame?.fresh === i ? 'result' : '',
               ].join(' ');
               return (
-                <li key={i} ref={focusLine === i ? focusRef : undefined} className={classes}>
+                <li key={i} ref={focusLine === i ? focusRef : undefined} className={classes} data-flip={`line${i}`}>
                   <span className="offset">{offsets[i]}</span>
                   <span className="line">{recordLine(record)}</span>
                   {stale.has(i) && <span className="tag">old version</span>}
@@ -181,7 +181,7 @@ export function AppendLogWidget({ withIndex = false, allowCrash = false }: Appen
               );
             })}
             {frame?.eof && (
-              <li ref={focusRef} className="eof">
+              <li ref={focusRef} className="eof" data-flip="eof">
                 <span className="offset">{totalBytes}</span>
                 <span className="line">▏ next write goes here</span>
               </li>
@@ -208,8 +208,14 @@ export function AppendLogWidget({ withIndex = false, allowCrash = false }: Appen
                     .sort(([a], [b]) => a.localeCompare(b, 'en', { numeric: true }))
                     .map(([k, line]) => (
                       <tr key={k} className={k === frame?.mapKey ? 'hl' : ''}>
-                        <td className="mono">{k}</td>
-                        <td className="mono">{offsets[line]}</td>
+                        <td className="mono">
+                          <span data-flip={`map:${k}`} data-flip-from={`line${line}`}>
+                            {k}
+                          </span>
+                        </td>
+                        <td className="mono">
+                          <span data-flip={`mapoff:${k}`}>{offsets[line]}</span>
+                        </td>
                       </tr>
                     ))}
                   {entries.size === 0 && (

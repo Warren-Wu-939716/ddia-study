@@ -36,6 +36,8 @@ export function TreeView({ tree, read = [], written = [], overflow, maxWidth = 9
             x2={e.x2}
             y2={e.y2}
             className={`tree-edge ${readSet.has(e.parentId) && readSet.has(e.childId) ? 'read' : ''} ${e.pending ? 'pending' : ''}`}
+            // Geometry is part of the id, so a re-routed edge cross-fades while the pages slide.
+            data-flip={`edge:${e.parentId}-${e.childId}:${Math.round(e.x1)},${Math.round(e.y1)},${Math.round(e.x2)},${Math.round(e.y2)}`}
           />
         ))}
         {layout.boxes.map(({ page, x, y, width }) => {
@@ -45,6 +47,7 @@ export function TreeView({ tree, read = [], written = [], overflow, maxWidth = 9
               key={page.id}
               transform={`translate(${x} ${y})`}
               className={`page ${page.type} ${writtenSet.has(page.id) ? 'written' : readSet.has(page.id) ? 'read' : ''} ${overflow === page.id ? 'overflow' : ''}`}
+              data-flip={`page${page.id}`}
             >
               <rect width={width} height={layout.pageHeight} rx={5} />
               {Array.from({ length: cells }, (_, i) => (
