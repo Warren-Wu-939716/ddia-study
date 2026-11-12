@@ -119,25 +119,25 @@ export function BloomLab() {
         <dl className="stats">
           <div>
             <dt>Keys (n)</dt>
-            <dd>{keys.length}</dd>
+            <dd data-flip="stat-n">{keys.length}</dd>
           </div>
           <div>
             <dt>Bits per key</dt>
-            <dd>{keys.length ? (size / keys.length).toFixed(1) : '—'}</dd>
+            <dd data-flip="stat-bpk">{keys.length ? (size / keys.length).toFixed(1) : '—'}</dd>
           </div>
           <div>
             <dt>Bits set</dt>
-            <dd>
+            <dd data-flip="stat-set">
               {onBits}/{size}
             </dd>
           </div>
           <div>
             <dt>Theoretical FP rate</dt>
-            <dd>{formatRate(theory)}</dd>
+            <dd data-flip="stat-theory">{formatRate(theory)}</dd>
           </div>
           <div>
             <dt>Best k for this n</dt>
-            <dd>{optimalHashCount(size, keys.length)}</dd>
+            <dd data-flip="stat-k">{optimalHashCount(size, keys.length)}</dd>
           </div>
           <div>
             <dt>Measured FP rate</dt>

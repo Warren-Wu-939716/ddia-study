@@ -44,12 +44,18 @@ export function SsdGcWidget() {
       </div>
       <div className="flash">
         {blocks.map((block, b) => (
-          <div key={b} className={`flash-block ${frame?.victim === b ? 'affected' : ''}`}>
+          <div key={b} className={`flash-block ${frame?.victim === b ? 'affected' : ''}`} data-flip-anchor={`block${b}`}>
             <span className="block-label">erase block {b}</span>
             {block.map((page, i) => {
               const classes = ['flash-page', page ? `file-${page.file}` : 'free', page?.stale ? 'stale' : '', same(frame?.to, b, i) ? 'copied' : '', same(frame?.from, b, i) ? 'moved-out' : ''];
               return (
-                <span key={i} className={classes.join(' ')}>
+                <span
+                  key={i}
+                  className={classes.join(' ')}
+                  data-flip={page ? `${page.file}${page.part}` : `free:${b}:${i}`}
+                  data-flip-state={page?.stale ? 'stale' : 'live'}
+                  data-flip-to={`block${b}`}
+                >
                   {page ? `${page.file}${page.part}` : 'free'}
                 </span>
               );
@@ -118,12 +124,12 @@ export function WriteAmpWidget() {
         <div className="bar-row">
           <span>B-tree</span>
           <span className="bar" style={{ width: `${(btree / max) * 100}%` }} />
-          <span className="mono">{btree.toFixed(1)}×</span>
+          <span className="mono" data-flip="wa-btree">{btree.toFixed(1)}×</span>
         </div>
         <div className="bar-row">
           <span>LSM-tree</span>
           <span className="bar column" style={{ width: `${(lsm / max) * 100}%` }} />
-          <span className="mono">{lsm.toFixed(1)}×</span>
+          <span className="mono" data-flip="wa-lsm">{lsm.toFixed(1)}×</span>
         </div>
       </div>
       <p className="widget-status" role="status">

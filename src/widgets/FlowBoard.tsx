@@ -8,12 +8,12 @@ import type { Board, BoardFrame, Box, Scenario } from './logic/board.ts';
 function BoardBox({ box }: { box: Box }) {
   const chips = box.chips ?? [];
   return (
-    <section className={`board-box ${box.tone ?? ''}`} aria-label={box.title}>
+    <section className={`board-box ${box.tone ?? ''}`} aria-label={box.title} data-flip-anchor={box.id}>
       <h4>{box.title}</h4>
       {chips.length > 0 ? (
         <div className="board-chips">
           {chips.map((c, i) => (
-            <span key={i} className={`board-chip ${c.tone ?? ''}`}>
+            <span key={i} className={`board-chip ${c.tone ?? ''}`} data-flip={c.id ?? c.text} data-flip-from={c.from} data-flip-to={c.to}>
               {c.tag && <sup>{c.tag}</sup>}
               {c.text}
             </span>
@@ -23,7 +23,7 @@ function BoardBox({ box }: { box: Box }) {
         box.empty && !box.lines?.length && <p className="muted small board-empty">{box.empty}</p>
       )}
       {box.lines?.map((line, i) => (
-        <p key={i} className="board-line">
+        <p key={i} className="board-line" data-flip={`${box.id}~${i}`}>
           <RichText text={line} inline />
         </p>
       ))}

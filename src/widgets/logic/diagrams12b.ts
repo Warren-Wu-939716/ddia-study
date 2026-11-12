@@ -22,7 +22,7 @@ export function ledgerFrames(mode: LedgerMode): BoardFrame[] {
           : {
               id: 'store',
               title: 'ledger (append-only)',
-              chips: entries.map((e, i) => ({ text: `${e.amount < 0 ? '−' : '+'}${money(Math.abs(e.amount))} ${e.label}`, tag: `#${i + 1}`, tone: e.tone })),
+              chips: entries.map((e, i) => ({ text: `${e.amount < 0 ? '−' : '+'}${money(Math.abs(e.amount))} ${e.label}`, tag: `#${i + 1}`, tone: e.tone, from: 'world' })),
             },
       ],
       [
@@ -109,7 +109,10 @@ export function shredFrames(mode: ShredMode): BoardFrame[] {
               {
                 id: 'keys',
                 title: 'key store',
-                chips: [{ text: 'k7 (user 7)', tone: keyGone ? ('bad' as const) : undefined, tag: keyGone ? 'deleted' : undefined }, { text: 'k9 (user 9)' }],
+                chips: [
+                  { id: 'k7', text: 'k7 (user 7)', tone: keyGone ? ('bad' as const) : undefined, tag: keyGone ? 'deleted' : undefined },
+                  { id: 'k9', text: 'k9 (user 9)' },
+                ],
               },
             ],
           ]
@@ -119,6 +122,7 @@ export function shredFrames(mode: ShredMode): BoardFrame[] {
         title: copy.title,
         tone: focusCopy === copy.id ? ('focus' as const) : undefined,
         chips: USER_EVENTS.filter((e) => !(removed.has(copy.id) && e.user === 'u7')).map((e) => ({
+          id: `${copy.id}:${USER_EVENTS.indexOf(e)}`,
           text: mode === 'shred' && keyGone && e.user === 'u7' ? `${e.user}: unreadable` : `${e.user}: ${e.text}`,
           tone: e.user !== 'u7' ? undefined : mode === 'shred' ? (keyGone ? ('muted' as const) : undefined) : ('warn' as const),
         })),
@@ -243,7 +247,7 @@ export function cepFrames(): BoardFrame[] {
         {
           id: 'stream',
           title: 'card payments flowing past',
-          chips: PAYMENTS.slice(0, seen).map((p, i) => ({ text: `${p.card} · ${p.country}`, tag: at(p.t), tone: i === seen - 1 ? 'focus' : 'muted' })),
+          chips: PAYMENTS.slice(0, seen).map((p, i) => ({ id: `pay${i}`, text: `${p.card} · ${p.country}`, tag: at(p.t), tone: i === seen - 1 ? 'focus' : 'muted' })),
           empty: 'none yet',
         },
       ],
@@ -269,7 +273,7 @@ export function cepFrames(): BoardFrame[] {
     } else if (before.country === p.country) {
       step(`${at(p.t)}: ${p.card} in ${p.country} again. Same country — no match. The memory is updated.`, { quick: true });
     } else if (p.t - before.t <= WITHIN) {
-      alerts.push({ text: `${p.card}: ${before.country} → ${p.country} in ${p.t - before.t} min`, tone: 'bad' });
+      alerts.push({ text: `${p.card}: ${before.country} → ${p.country} in ${p.t - before.t} min`, tone: 'bad', from: 'engine' });
       step(`${at(p.t)}: ${p.card} in ${p.country}, but it was in ${before.country} ${p.t - before.t} minutes ago. The pattern matches — the engine emits an alert.`, { tone: 'warn' });
     } else {
       step(`${at(p.t)}: ${p.card} in ${p.country}. It was last in ${before.country}, but ${p.t - before.t} minutes ago — outside the window, so no match.`);
@@ -303,7 +307,7 @@ export function streamSearchFrames(): BoardFrame[] {
         {
           id: 'listings',
           title: 'new listings',
-          chips: LISTINGS.slice(0, seen).map((l, i) => ({ text: `${l.kind}, ${l.city}, £${l.price}`, tone: i === seen - 1 ? 'focus' : 'muted' })),
+          chips: LISTINGS.slice(0, seen).map((l, i) => ({ id: `listing${i}`, text: `${l.kind}, ${l.city}, £${l.price}`, tone: i === seen - 1 ? 'focus' : 'muted' })),
           empty: 'none yet',
         },
       ],
@@ -317,7 +321,7 @@ export function streamSearchFrames(): BoardFrame[] {
   for (const l of LISTINGS) {
     seen++;
     const hits = SAVED.filter((s) => s.kind === l.kind && s.city === l.city && l.price <= s.max);
-    for (const h of hits) sent.push({ text: `${h.who}: ${l.kind} in ${l.city}`, tone: 'ok' });
+    for (const h of hits) sent.push({ text: `${h.who}: ${l.kind} in ${l.city}`, tone: 'ok', from: `listing${seen - 1}` });
     step(
       hits.length
         ? `New listing: ${l.kind}, ${l.city}, £${l.price}. It matches ${hits.map((h) => `${h.who}’s`).join(' and ')} search → send a notification.`
@@ -357,7 +361,7 @@ export function analyticsFrames(): BoardFrame[] {
         {
           id: 'requests',
           title: 'requests (response times)',
-          chips: REQUESTS.slice(0, seen).map((r, i) => ({ text: `${r.ms} ms`, tag: stamp(r.s), tone: i === seen - 1 ? 'focus' : 'muted' })),
+          chips: REQUESTS.slice(0, seen).map((r, i) => ({ id: `req${i}`, text: `${r.ms} ms`, tag: stamp(r.s), tone: i === seen - 1 ? 'focus' : 'muted' })),
           empty: 'none yet',
         },
       ],
@@ -433,7 +437,7 @@ export function ivmFrames(mode: IvmMode): BoardFrame[] {
   const view = (): Board => ({
     columns: [
       [{ id: 'orders', title: `orders table (${rows.length} rows)`, lines: rows.map((r) => `#${r.id} ${r.region} £${r.amount}`) }],
-      [{ id: 'change', title: 'change', chips: change ? [{ text: change, tone: 'focus' }] : [], empty: 'none yet' }],
+      [{ id: 'change', title: 'change', chips: change ? [{ text: change, tone: 'focus', to: 'view' }] : [], empty: 'none yet' }],
       [
         {
           id: 'view',
@@ -811,7 +815,7 @@ export function versionedJoinFrames(mode: VersionMode): BoardFrame[] {
     }
     const r = rateFor(s.day);
     const tax = (s.amount * r.rate) / 100;
-    salesSeen.push({ text: `${s.id} £${s.amount}${mode === 'versioned' ? ` → ${r.v}` : ''}`, tag: `day ${s.day}`, tone: 'focus' });
+    salesSeen.push({ id: s.id, text: `${s.id} £${s.amount}${mode === 'versioned' ? ` → ${r.v}` : ''}`, tag: `day ${s.day}`, tone: 'focus' });
     liveTotal += tax;
     live.push(`${s.id}: ${r.rate}% → ${money(tax)}`);
     step(`Day ${s.day}: sale ${s.id} (£${s.amount}) is joined with the rate in force now, ${r.rate}% → tax ${money(tax)}.${mode === 'versioned' ? ` The sale records which version it used: ${r.v}.` : ''}`, {
@@ -892,7 +896,7 @@ export function checkpointFrames(mode: RecoveryMode): BoardFrame[] {
   const process = (o: number) => {
     count++;
     next = o + 1;
-    if (count === MILESTONE) emails.push({ text: '“5 views!” email', tone: emails.length ? 'bad' : 'warn' });
+    if (count === MILESTONE) emails.push({ id: `email${emails.length}`, text: '“5 views!” email', tone: emails.length ? 'bad' : 'warn', from: 'operator' });
   };
   const save = () => {
     safe = next;
@@ -982,7 +986,7 @@ export function stateRecoveryFrames(mode: StateMode): BoardFrame[] {
       ...(mode === 'remote'
         ? [[{ id: 'store', title: 'remote database', lines: [...show(remote), `network round trips: **${trips}**`] }]]
         : mode === 'changelog'
-          ? [[{ id: 'store', title: 'changelog topic (log-compacted)', chips: changelog.map((c) => ({ text: `${c.key}=${c.value}`, tone: c.tone })), empty: 'empty' }]]
+          ? [[{ id: 'store', title: 'changelog topic (log-compacted)', chips: changelog.map((c) => ({ text: `${c.key}=${c.value}`, tone: c.tone, from: 'node1' })), empty: 'empty' }]]
           : []),
     ],
   });
@@ -1069,12 +1073,12 @@ export function fencingFrames(mode: FenceMode): BoardFrame[] {
   const write = (value: number, token: number, by: string) => {
     for (const w of writes) if (w.tone === 'focus') w.tone = undefined;
     if (mode === 'tokens' && token < highest) {
-      writes.push({ text: `${by}: total=${value}`, tag: `token ${token}`, tone: 'bad' });
+      writes.push({ text: `${by}: total=${value}`, tag: `token ${token}`, tone: 'bad', from: by.replace(' ', '') });
       return false;
     }
     highest = Math.max(highest, token);
     total = value;
-    writes.push({ text: `${by}: total=${value}`, tag: `token ${token}`, tone: 'focus' });
+    writes.push({ text: `${by}: total=${value}`, tag: `token ${token}`, tone: 'focus', from: by.replace(' ', '') });
     return true;
   };
 

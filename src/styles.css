@@ -2882,6 +2882,21 @@ svg.timeline .win.corrected rect {
   background: var(--error-soft);
   color: var(--error);
 }
+.broker-last {
+  display: inline-block;
+  margin-left: 0.4rem;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  padding: 0 0.35rem;
+  border-radius: 6px;
+  border: 1px solid var(--line);
+  background: var(--surface);
+}
+.broker-last sup {
+  font-size: 0.6rem;
+  color: var(--muted);
+  margin-right: 0.15rem;
+}
 
 /* flow board: boxes of chips with arrows between columns */
 .board {
@@ -3242,6 +3257,40 @@ fieldset.plain {
 .status-badge.missed {
   background: var(--error-soft);
   color: var(--error);
+}
+
+/* animated transitions (components/Flip.tsx) */
+.flip-root {
+  position: relative;
+  min-width: 0;
+}
+.flip-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: visible;
+  z-index: 20;
+}
+svg [data-flip] {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.hop-token,
+.pb-probe {
+  display: inline-block;
+  margin-left: 0.4rem;
+  padding: 0 0.4rem;
+  border-radius: 999px;
+  background: var(--accent);
+  color: var(--accent-ink);
+  font-size: 0.72rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.hop-token {
+  display: block;
+  width: fit-content;
+  margin: 0.4rem 0 0;
 }
 
 @media (prefers-reduced-motion: reduce) {

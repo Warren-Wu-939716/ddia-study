@@ -63,7 +63,7 @@ export function RowColumnWidget() {
           <div key={line.label} className={`disk-line ${frame?.line === li ? 'current' : ''} ${reached(li) ? '' : 'pending'}`}>
             <span className="disk-label">{line.label}</span>
             {line.cells.map(({ r, c }) => (
-              <span key={`${r}-${c}`} className={`disk-cell col-${c} ${reached(li) && isRead(c) ? 'read' : ''}`}>
+              <span key={`${r}-${c}`} className={`disk-cell col-${c} ${reached(li) && isRead(c) ? 'read' : ''}`} data-flip={`cell${r}-${c}`} data-flip-state={reached(li) && isRead(c) ? 'read' : ''}>
                 {SHORT[c]}
                 {r + 1}
               </span>
@@ -150,12 +150,19 @@ export function BitmapWidget() {
           <span className="bitmap-label mono">product col</span>
           <span className="bitmap values">
             {rows.map((r, i) => (
-              <span key={i} className={finished && evaluation.matchingRows.includes(i) ? 'match' : ''}>
+              <span
+                key={ROWS.indexOf(r)}
+                className={finished && evaluation.matchingRows.includes(i) ? 'match' : ''}
+                data-flip={`row${ROWS.indexOf(r)}`}
+                data-flip-state={finished && evaluation.matchingRows.includes(i) ? 'match' : ''}
+              >
                 {r.product_sk}
               </span>
             ))}
           </span>
-          <span className="muted small mono">{productRuns} runs</span>
+          <span className="muted small mono" data-flip="product-runs">
+            {productRuns} runs
+          </span>
         </div>
         {items.slice(0, shown).map((item, i) => (
           <Bits key={item.label} bits={item.bits} label={item.label} current={frame !== undefined && !stepper.atEnd && i === shown - 1} />
@@ -251,21 +258,25 @@ export function DataCubeWidget() {
                 <tr key={d}>
                   <th>{d}</th>
                   {CUBE.products.map((p) => (
-                    <td key={p} className={cell(d, p)}>
+                    <td key={p} className={cell(d, p)} data-flip={`cube:${d}:${p}`} data-flip-state={cell(d, p)}>
                       {CUBE.cells[d][p]}
                     </td>
                   ))}
-                  <td className={`total ${cell(d, 'total')}`}>{CUBE.dateTotals[d]}</td>
+                  <td className={`total ${cell(d, 'total')}`} data-flip={`cube:${d}:total`} data-flip-state={cell(d, 'total')}>
+                    {CUBE.dateTotals[d]}
+                  </td>
                 </tr>
               ))}
               <tr>
                 <th>total</th>
                 {CUBE.products.map((p) => (
-                  <td key={p} className={`total ${cell('total', p)}`}>
+                  <td key={p} className={`total ${cell('total', p)}`} data-flip={`cube:total:${p}`} data-flip-state={cell('total', p)}>
                     {CUBE.productTotals[p]}
                   </td>
                 ))}
-                <td className={`total ${cell('total', 'total')}`}>{CUBE.total}</td>
+                <td className={`total ${cell('total', 'total')}`} data-flip="cube:total:total" data-flip-state={cell('total', 'total')}>
+                  {CUBE.total}
+                </td>
               </tr>
             </tbody>
           </table>
@@ -287,7 +298,9 @@ export function DataCubeWidget() {
             <tbody>
               {FACTS.map((s, i) => (
                 <tr key={i} className={rowClass(i)}>
-                  <td>{s.date}</td>
+                  <td data-flip={`fact${i}`} data-flip-state={rowClass(i).trim()}>
+                    {s.date}
+                  </td>
                   <td>{s.product}</td>
                   <td>{s.store}</td>
                   <td>${s.price}</td>

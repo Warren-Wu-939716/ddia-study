@@ -17,7 +17,9 @@ function Bars({ title, values, highlight }: { title: string; values: readonly nu
         {values.map((v, i) => (
           <div key={i} className={`rate-bar ${highlight === i ? 'current' : ''}`}>
             <span className="rate-fill" style={{ height: `${(v / max) * 100}%` }} />
-            <span className="rate-value">{v}</span>
+            <span className="rate-value" data-flip={`${title}:${i}`}>
+              {v}
+            </span>
             <span className="rate-minute">{i}</span>
           </div>
         ))}
@@ -115,12 +117,12 @@ export function WindowsWidget() {
               </text>
             </g>
           ))}
-          {frame && <line x1={x(frame.watermark)} y1={14} x2={x(frame.watermark)} y2={height} className="watermark" />}
+          {frame && <line x1={x(frame.watermark)} y1={14} x2={x(frame.watermark)} y2={height} className="watermark" data-flip="watermark" />}
           {WINDOW_EVENTS.map((e) => {
             const arrived = frame?.arrived.includes(e.id);
             const dropped = frame?.dropped.includes(e.id);
             return (
-              <g key={e.id} className={`ev ${arrived ? 'arrived' : ''} ${frame?.current === e.id ? 'current' : ''} ${dropped ? 'dropped' : ''}`}>
+              <g key={e.id} className={`ev ${arrived ? 'arrived' : ''} ${frame?.current === e.id ? 'current' : ''} ${dropped ? 'dropped' : ''}`} data-flip={`ev:${e.id}`}>
                 <circle cx={x(e.t)} cy={30} r={6} />
                 <text x={x(e.t)} y={44} textAnchor="middle" className="ev-label">
                   {e.id}
@@ -129,7 +131,7 @@ export function WindowsWidget() {
             );
           })}
           {windows.map((w, i) => (
-            <g key={w.id} className={`win ${w.emitted ? 'emitted' : 'open'} ${w.corrected ? 'corrected' : ''}`}>
+            <g key={w.id} className={`win ${w.emitted ? 'emitted' : 'open'} ${w.corrected ? 'corrected' : ''}`} data-flip={`win:${w.id}`} data-flip-from={frame?.current ? `ev:${frame.current}` : undefined}>
               <rect x={x(w.start)} y={top + i * rowH} width={Math.max(4, x(w.end) - x(w.start))} height={rowH - 4} rx={3} />
               <text x={x(w.start) + 4} y={top + i * rowH + 11} className="win-label">
                 {w.events.length} {w.emitted ? (w.corrected ? '(corrected)' : '(reported)') : ''}
@@ -198,7 +200,7 @@ export function StreamJoinsWidget() {
             <h4>inputs, in arrival order</h4>
             <ol className="small change-log">
               {frame.inputs.map((input, i) => (
-                <li key={i} className={`${i < frame.processed ? 'applied' : ''} ${i === frame.processed - 1 ? 'current' : ''}`}>
+                <li key={i} className={`${i < frame.processed ? 'applied' : ''} ${i === frame.processed - 1 ? 'current' : ''}`} data-flip={`in${i}`}>
                   <span className={`stream-tag s-${input.stream.replace(/\s/g, '-')}`}>{input.stream}</span> {input.text}
                 </li>
               ))}
@@ -209,7 +211,15 @@ export function StreamJoinsWidget() {
               <div key={s.label}>
                 <h4>{s.label}</h4>
                 <ul className="small mono join-state">
-                  {s.rows.length ? s.rows.map((r) => <li key={r}>{r}</li>) : <li className="muted">empty</li>}
+                  {s.rows.length ? (
+                    s.rows.map((r) => (
+                      <li key={r} data-flip={`state:${s.label}:${r}`} data-flip-from={`in${frame.processed - 1}`}>
+                        {r}
+                      </li>
+                    ))
+                  ) : (
+                    <li className="muted">empty</li>
+                  )}
                 </ul>
               </div>
             ))}
@@ -218,7 +228,7 @@ export function StreamJoinsWidget() {
             <h4>output stream</h4>
             <ol className="small change-log">
               {frame.output.map((o, i) => (
-                <li key={i} className={i === frame.fresh ? 'current' : 'applied'}>
+                <li key={i} className={i === frame.fresh ? 'current' : 'applied'} data-flip={`out${i}`} data-flip-from={`in${frame.processed - 1}`}>
                   {o}
                 </li>
               ))}
@@ -267,22 +277,38 @@ export function ExactlyOnceWidget() {
           <div className="stream-row">
             {DEPOSITS.map((amount, offset) => (
               <span key={offset} className="broker-slot">
-                <span className={`chip-static msg-chip ${frame?.current === offset ? 'current' : ''} ${frame && offset < frame.committed ? 'sent' : ''}`}>
+                <span className={`chip-static msg-chip ${frame?.current === offset ? 'current' : ''} ${frame && offset < frame.committed ? 'sent' : ''}`} data-flip={`dep${offset}`}>
                   <sup>{offset}</sup>+{amount}
                 </span>
-                {frame?.committed === offset && <span className="broker-marker committed g0">✓ committed</span>}
+                {frame?.committed === offset && (
+                  <span className="broker-marker committed g0" data-flip="committed">
+                    ✓ committed
+                  </span>
+                )}
               </span>
             ))}
-            {frame?.committed === DEPOSITS.length && <span className="broker-marker committed g0">✓ all committed</span>}
+            {frame?.committed === DEPOSITS.length && (
+              <span className="broker-marker committed g0" data-flip="committed">
+                ✓ all committed
+              </span>
+            )}
           </div>
         </section>
         <section className={`panel store-box ${frame?.phase === 'crash' ? 'failed' : frame?.phase === 'write' ? 'active' : ''}`}>
           <h4>accounts database</h4>
           <p className="store-value">
-            balance = <strong>{frame?.balance ?? 0}</strong>
+            balance = <strong data-flip="balance">{frame?.balance ?? 0}</strong>
           </p>
-          {mode === 'idempotent' && <p className="small mono">last applied offset = {frame?.lastApplied ?? '—'}</p>}
-          {frame && <p className={`small phase phase-${frame.phase}`}>{frame.phase}</p>}
+          {mode === 'idempotent' && (
+            <p className="small mono" data-flip="last-applied">
+              last applied offset = {frame?.lastApplied ?? '—'}
+            </p>
+          )}
+          {frame && (
+            <p className={`small phase phase-${frame.phase}`} data-flip="phase">
+              {frame.phase}
+            </p>
+          )}
         </section>
       </div>
       <StepControls

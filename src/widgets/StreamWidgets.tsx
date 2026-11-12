@@ -55,7 +55,11 @@ export function FanoutWidget() {
       <div className="stream-row">
         <span className="stream-label">topic</span>
         {Array.from({ length: MESSAGES }, (_, i) => (
-          <span key={i} className={`chip-static msg-chip ${frame && i < frame.sent ? 'sent' : ''} ${frame?.sent === i + 1 && frame.current.length ? 'current' : ''}`}>
+          <span
+            key={i}
+            className={`chip-static msg-chip ${frame && i < frame.sent ? 'sent' : ''} ${frame?.sent === i + 1 && frame.current.length ? 'current' : ''}`}
+            data-flip={`m${i + 1}`}
+          >
             m{i + 1}
           </span>
         ))}
@@ -72,7 +76,7 @@ export function FanoutWidget() {
                 <div key={c.id} className={`stream-row ${frame?.current.includes(c.id) ? 'active' : ''}`}>
                   <span className="stream-label">consumer {c.id}</span>
                   {(frame?.received[c.id] ?? []).map((m) => (
-                    <span key={m} className={`chip-static msg-chip ${frame?.sent === m && frame.current.includes(c.id) ? 'current' : ''}`}>
+                    <span key={m} className={`chip-static msg-chip ${frame?.sent === m && frame.current.includes(c.id) ? 'current' : ''}`} data-flip={`m${m}`}>
                       m{m}
                     </span>
                   ))}
@@ -117,7 +121,7 @@ export function RedeliveryWidget() {
           <h4>broker queue</h4>
           <div className="stream-row">
             {(frame?.queue ?? []).map((m) => (
-              <span key={m} className={`chip-static msg-chip ${mode === 'poison' && m === 'm2' ? 'bad' : ''}`}>
+              <span key={m} className={`chip-static msg-chip ${mode === 'poison' && m === 'm2' ? 'bad' : ''}`} data-flip={m}>
                 {m}
               </span>
             ))}
@@ -127,7 +131,7 @@ export function RedeliveryWidget() {
             <div className="dlq">
               <strong>dead letter queue</strong>{' '}
               {frame.dlq.map((m) => (
-                <span key={m} className="chip-static msg-chip bad">
+                <span key={m} className="chip-static msg-chip bad" data-flip={m}>
                   {m}
                 </span>
               ))}
@@ -140,10 +144,24 @@ export function RedeliveryWidget() {
               consumer {c} {frame?.down.includes(c) && <span className="tag-bad">crashed</span>}
             </h4>
             <p className="small">
-              working on: <strong>{frame?.inFlight[c] ?? '—'}</strong>
+              working on:{' '}
+              {frame?.inFlight[c] ? (
+                <span className="chip-static msg-chip current" data-flip={frame.inFlight[c]}>
+                  {frame.inFlight[c]}
+                </span>
+              ) : (
+                <strong>—</strong>
+              )}
             </p>
             <p className="small">
-              done (in order): <span className="mono">{frame?.done[c].join(', ') || '—'}</span>
+              done (in order):{' '}
+              {frame?.done[c].length
+                ? frame.done[c].map((m) => (
+                    <span key={m} className="chip-static msg-chip sent" data-flip={m}>
+                      {m}
+                    </span>
+                  ))
+                : '—'}
             </p>
           </section>
         ))}
@@ -167,10 +185,13 @@ export function DualWritesWidget() {
   const diverged = done && frame.db !== frame.index;
 
   const store = (name: string, value: string | undefined, target: 'db' | 'index') => (
-    <section className={`panel store-box ${frame?.target === target ? (frame.failed ? 'failed' : 'active') : ''} ${diverged ? 'diverged' : ''}`}>
+    <section
+      className={`panel store-box ${frame?.target === target ? (frame.failed ? 'failed' : 'active') : ''} ${diverged ? 'diverged' : ''}`}
+      data-flip-anchor={`store-${target}`}
+    >
       <h4>{name}</h4>
       <p className="store-value">
-        X = <strong>{value ?? 'old'}</strong>
+        X = <strong data-flip={`${target}-value`}>{value ?? 'old'}</strong>
       </p>
       {frame?.target === target && frame.actor && (
         <p className="small">
@@ -207,7 +228,7 @@ export function DualWritesWidget() {
             <h4>database change log</h4>
             <ol className="mono small change-log">
               {(frame?.log ?? []).map((entry, i) => (
-                <li key={i} className={frame && i < frame.applied ? 'applied' : ''}>
+                <li key={i} className={frame && i < frame.applied ? 'applied' : ''} data-flip={`log${i}`} data-flip-from="store-db">
                   #{i + 1} {entry}
                   {frame && i < frame.applied && ' ✓ applied to index'}
                 </li>
@@ -258,6 +279,8 @@ export function LogCompactionWidget() {
           <span
             key={i}
             className={`chip-static log-cell ${frame?.cursor === i ? 'current' : ''} ${frame?.kept.includes(i) ? 'kept' : ''} ${frame?.dropped.includes(i) ? 'dropped' : ''} ${r.value === null ? 'tomb' : ''}`}
+            data-flip={`off${i}`}
+            data-flip-state={frame?.kept.includes(i) ? 'kept' : frame?.dropped.includes(i) ? 'dropped' : ''}
           >
             <sup>{i}</sup>
             {r.key}={r.value ?? '✝'}
@@ -268,7 +291,7 @@ export function LogCompactionWidget() {
         <div className="stream-row log-row">
           <span className="stream-label">compacted</span>
           {frame.compacted.map(({ offset, record }) => (
-            <span key={offset} className="chip-static log-cell kept">
+            <span key={offset} className="chip-static log-cell kept" data-flip={`off${offset}`}>
               <sup>{offset}</sup>
               {record.key}={record.value}
             </span>
@@ -281,7 +304,11 @@ export function LogCompactionWidget() {
           <tbody>
             {Object.entries(frame.rebuilt).map(([k, v]) => (
               <tr key={k}>
-                <td className="mono">{k}</td>
+                <td className="mono">
+                  <span data-flip={`rebuilt:${k}`} data-flip-from={`off${frame.compacted?.find((c) => c.record.key === k)?.offset}`}>
+                    {k}
+                  </span>
+                </td>
                 <td className="mono">{v}</td>
               </tr>
             ))}
@@ -325,7 +352,7 @@ export function EventLogWidget() {
           <h4>event log (append-only)</h4>
           <ol className="mono small change-log">
             {CART_EVENTS.map((e, i) => (
-              <li key={i} className={`${frame && i < frame.applied ? 'applied' : ''} ${frame && i === frame.applied - 1 ? 'current' : ''}`}>
+              <li key={i} className={`${frame && i < frame.applied ? 'applied' : ''} ${frame && i === frame.applied - 1 ? 'current' : ''}`} data-flip={`ev${i}`}>
                 {label(e)}
               </li>
             ))}
@@ -333,13 +360,34 @@ export function EventLogWidget() {
         </section>
         <section className="panel">
           <h4>view: cart</h4>
-          <p className="small">{views ? `${views.cart.join(', ') || 'empty'} · ${views.status}` : '—'}</p>
+          <p className="small">
+            {views ? (
+              <>
+                {views.cart.map((item) => (
+                  <span key={item} className="chip-static msg-chip" data-flip={`cart:${item}`} data-flip-from={`ev${frame.applied - 1}`}>
+                    {item}
+                  </span>
+                ))}{' '}
+                <span data-flip="cart-status">{views.cart.length ? '' : 'empty · '}{views.status}</span>
+              </>
+            ) : (
+              '—'
+            )}
+          </p>
           <h4>view: removed before checkout</h4>
-          <p className="small">{views?.removed.join(', ') || '—'}</p>
+          <p className="small">
+            {views?.removed.length
+              ? views.removed.map((item, i) => (
+                  <span key={`${item}${i}`} className="chip-static msg-chip" data-flip={`removed:${item}`} data-flip-from={`ev${frame!.applied - 1}`}>
+                    {item}
+                  </span>
+                ))
+              : '—'}
+          </p>
           {views?.popularity && (
             <>
               <h4>new view: times added to a cart</h4>
-              <p className="small">
+              <p className="small" data-flip="popularity">
                 {Object.entries(views.popularity)
                   .map(([k, v]) => `${k} ×${v}`)
                   .join(', ') || '—'}

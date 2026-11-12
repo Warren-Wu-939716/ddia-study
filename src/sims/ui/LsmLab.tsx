@@ -159,27 +159,27 @@ export function LsmLab() {
         <dl className="stats">
           <div>
             <dt>App writes</dt>
-            <dd>{stats.logicalWrites}</dd>
+            <dd data-flip="stat-app">{stats.logicalWrites}</dd>
           </div>
           <div>
             <dt>WAL writes</dt>
-            <dd>{stats.walWrites}</dd>
+            <dd data-flip="stat-wal">{stats.walWrites}</dd>
           </div>
           <div>
             <dt>Flushed entries</dt>
-            <dd>{stats.flushWrites}</dd>
+            <dd data-flip="stat-flush">{stats.flushWrites}</dd>
           </div>
           <div>
             <dt>Compacted entries</dt>
-            <dd>{stats.compactionWrites}</dd>
+            <dd data-flip="stat-compact">{stats.compactionWrites}</dd>
           </div>
           <div>
             <dt>Write amplification</dt>
-            <dd>{writeAmplification(stats).toFixed(2)}×</dd>
+            <dd data-flip="stat-wa">{writeAmplification(stats).toFixed(2)}×</dd>
           </div>
           <div>
             <dt>On disk / live keys</dt>
-            <dd>
+            <dd data-flip="stat-disk">
               {diskEntries(shown)} / {liveKeyCount(shown)}
             </dd>
           </div>
@@ -191,7 +191,9 @@ export function LsmLab() {
               .slice()
               .reverse()
               .map((event, i) => (
-                <li key={`${state.events.length - i}`}>{event}</li>
+                <li key={`${state.events.length - i}`} data-flip={`event${state.events.length - i}`}>
+                  {event}
+                </li>
               ))}
           </ol>
         )}

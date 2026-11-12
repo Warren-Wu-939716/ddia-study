@@ -146,7 +146,14 @@ export function VectorSearchWidget() {
             const state = comparing ? (compared ? 'compared' : 'skipped') : '';
             return (
               <g key={d.id}>
-                <circle cx={toPx(d.x)} cy={toPy(d.y)} r={hit ? 6 : 4.5} className={`doc topic-${PARTITION[i]} ${state} ${hit ? 'hit' : ''} ${miss ? 'missed' : ''}`}>
+                <circle
+                  cx={toPx(d.x)}
+                  cy={toPy(d.y)}
+                  r={hit ? 6 : 4.5}
+                  className={`doc topic-${PARTITION[i]} ${state} ${hit ? 'hit' : ''} ${miss ? 'missed' : ''}`}
+                  data-flip={`doc${d.id}`}
+                  data-flip-state={`${state}${hit ? 'hit' : ''}${miss ? 'missed' : ''}`}
+                >
                   <title>{d.label}</title>
                 </circle>
                 {(hit || miss) && (
@@ -162,7 +169,12 @@ export function VectorSearchWidget() {
               </g>
             );
           })}
-          <path d="M0,-8 L2,-2 8,-2 3,2 5,8 0,4 -5,8 -3,2 -8,-2 -2,-2Z" transform={`translate(${toPx(query.x)} ${toPy(query.y)})`} className="query-star" />
+          <path
+            d="M0,-8 L2,-2 8,-2 3,2 5,8 0,4 -5,8 -3,2 -8,-2 -2,-2Z"
+            transform={`translate(${toPx(query.x)} ${toPy(query.y)})`}
+            className="query-star"
+            data-flip="query-star"
+          />
         </svg>
         <div className="vector-side">
           <ul className="topic-legend">
@@ -176,7 +188,7 @@ export function VectorSearchWidget() {
           {ranked ? (
             <ol className="small">
               {search.results.map((r) => (
-                <li key={r.id}>
+                <li key={r.id} data-flip={`result${r.id}`} data-flip-from={`doc${r.id}`}>
                   {r.label}{' '}
                   <span className="muted mono">
                     {metric === 'cosine' ? `similarity ${closeness(metric, r, query).toFixed(2)}` : `distance ${(-closeness(metric, r, query)).toFixed(2)}`}

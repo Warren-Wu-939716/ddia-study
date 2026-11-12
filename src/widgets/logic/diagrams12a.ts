@@ -29,8 +29,8 @@ export function batchStreamFrames(mode: 'batch' | 'stream'): BoardFrame[] {
       ],
       [
         mode === 'batch'
-          ? { id: 'proc', title: 'today’s pile (waits for midnight)', chips: pile.map((id) => ({ text: id, tone: 'warn' })), empty: 'empty' }
-          : { id: 'proc', title: 'stream processor', chips: chips(processing, 'focus'), empty: 'idle — handles each order as it arrives' },
+          ? { id: 'proc', title: 'today’s pile (waits for midnight)', chips: pile.map((id) => ({ text: id, tone: 'warn', to: 'report' })), empty: 'empty' }
+          : { id: 'proc', title: 'stream processor', chips: processing.map((id) => ({ text: id, tone: 'focus', to: 'report' })), empty: 'idle — handles each order as it arrives' },
       ],
       [
         {
@@ -117,23 +117,23 @@ export function pubsubFrames(): BoardFrame[] {
   };
 
   step('Two producers, one topic called “orders”, and three consumers that each want to hear about new orders.');
-  produced.checkout.push({ text: 'order 1 placed', tag: '10:03:12', tone: 'focus' });
+  produced.checkout.push({ id: 'order1', text: 'order 1 placed', tag: '10:03:12', tone: 'focus' });
   step('Someone places order 1 on the website. The checkout code records that fact as an **event**: a small record of something that happened, with a timestamp.');
-  produced.checkout[0] = { text: '{"order":1,"type":"placed","at":"10:03:12"}', tone: 'focus' };
+  produced.checkout[0] = { id: 'order1', text: '{"order":1,"type":"placed","at":"10:03:12"}', tone: 'focus' };
   step('To send it, the event is **encoded** as bytes — here as JSON text.');
   settle();
-  topic.push({ text: 'order 1 placed', tag: '10:03:12', tone: 'focus' });
+  topic.push({ id: 'order1', text: 'order 1 placed', tag: '10:03:12', tone: 'focus' });
   step('The producer sends the event once, to the topic. It doesn’t know or care who will read it.');
   settle();
-  received.push({ text: 'order 1 placed' });
+  received.push({ id: 'order1', text: 'order 1 placed' });
   delivering = true;
   step('Every consumer subscribed to “orders” receives the same event and does its own job with it: email a receipt, update the search index, check for fraud.');
   delivering = false;
-  produced.app.push({ text: 'order 2 placed', tag: '10:03:15', tone: 'focus' });
-  topic.push({ text: 'order 2 placed', tag: '10:03:15', tone: 'focus' });
+  produced.app.push({ id: 'order2', text: 'order 2 placed', tag: '10:03:15', tone: 'focus' });
+  topic.push({ id: 'order2', text: 'order 2 placed', tag: '10:03:15', tone: 'focus' });
   step('The phone app is a second producer writing to the same topic. Order 2 goes in after order 1.');
   settle();
-  received.push({ text: 'order 2 placed' });
+  received.push({ id: 'order2', text: 'order 2 placed' });
   delivering = true;
   step('Again, each consumer gets its own copy.');
   delivering = false;
@@ -172,6 +172,7 @@ export function pollingFrames(mode: PollMode): BoardFrame[] {
           id: 'consumer',
           title: mode === 'notify' ? 'consumer (waits for the doorbell)' : `consumer (checks every ${every} s)`,
           tone: ringing ? 'focus' : undefined,
+          chips: ARRIVALS.filter((a) => seenAt.has(a.id)).map((a) => ({ text: a.id, tone: 'ok' })),
           lines: [
             mode === 'notify' ? `woken up: **${checks}** times (${empty} for nothing)` : `checks: **${checks}** (${empty} found nothing)`,
             ...ARRIVALS.filter((a) => seenAt.has(a.id)).map((a) => `${a.id} noticed ${seenAt.get(a.id)! - a.t === 0 ? 'immediately' : `${seenAt.get(a.id)! - a.t} s late`}`),
@@ -261,17 +262,17 @@ export function overloadFrames(mode: OverloadMode): BoardFrame[] {
           : {
               id: 'buffer',
               title: mode === 'buffer' ? 'queue (grows as needed)' : `queue (room for ${ROOM})`,
-              chips: chips(queue),
+              chips: queue.map((text) => ({ text, from: 'producer' })),
               empty: 'empty',
               lines: [`waiting: **${queue.length}**`],
             },
-        ...(mode === 'drop' ? [{ id: 'lost', title: 'dropped', chips: chips(lost, 'bad'), empty: 'none' }] : []),
+        ...(mode === 'drop' ? [{ id: 'lost', title: 'dropped', chips: lost.map((text) => ({ text, tone: 'bad' as const, from: 'producer' })), empty: 'none' }] : []),
       ],
       [
         {
           id: 'consumer',
           title: `consumer (${RATE_OUT} per second)`,
-          chips: done.map((m) => ({ text: m, tone: latest.includes(m) ? ('focus' as const) : ('ok' as const) })),
+          chips: done.map((m) => ({ text: m, tone: latest.includes(m) ? ('focus' as const) : ('ok' as const), from: 'producer' })),
           empty: 'nothing yet',
           lines: [`processed: **${done.length}**`],
         },
@@ -543,6 +544,7 @@ export function holFrames(mode: HolMode): BoardFrame[] {
         id: mode === 'log' ? `p${i}` : 'queue',
         title: mode === 'log' ? `partition ${i} → c${i + 1} only` : 'shared queue → any free consumer',
         chips: list.map((m) => ({
+          id: m,
           text: m === SLOW ? `${m} (slow)` : m,
           tone: finished.includes(m) ? 'ok' : working.includes(m) ? 'focus' : m === blocked ? 'bad' : undefined,
         })),
@@ -632,7 +634,7 @@ export function retentionFrames(): BoardFrame[] {
           title: `log (keeps the newest ${RETAIN})`,
           chips: [
             ...(start > 0 ? [{ text: `#0–${start - 1}`, tag: 'deleted', tone: 'muted' as const }] : []),
-            ...Array.from({ length: end - start }, (_, i) => start + i).map((o) => ({ text: `#${o}`, tone: o === appended ? ('focus' as const) : undefined })),
+            ...Array.from({ length: end - start }, (_, i) => start + i).map((o) => ({ text: `#${o}`, tone: o === appended ? ('focus' as const) : undefined, from: 'producer' })),
           ],
           empty: 'empty',
           lines: [`reports ▸ next #${fast}`, `archive ▸ next #${slow}`],
@@ -724,6 +726,7 @@ export function snapshotFrames(mode: SnapshotMode): BoardFrame[] {
             { text: '#1–#2', tag: 'deleted', tone: 'muted' },
             ...log.map((c) => ({
               text: `#${c.n} ${c.key}=${c.value}`,
+              from: 'db',
               tone: c.n === focus ? ('focus' as const) : applied.has(c.n) ? ('ok' as const) : skipped.has(c.n) ? ('bad' as const) : undefined,
             })),
           ],
@@ -836,7 +839,7 @@ export function outboxFrames(mode: OutboxMode): BoardFrame[] {
     step('The orders service owns an orders table. CDC publishes every change to it, and the shipping team’s service reads the customer name from those changes.');
     service = 'insert order 1';
     rows.push({ line: '1 · Ann · 20' });
-    stream.push({ text: '{id:1, cust_nm:"Ann"}', tone: 'focus' });
+    stream.push({ text: '{id:1, cust_nm:"Ann"}', tone: 'focus', from: 'orders' });
     step('Order 1 is inserted. CDC publishes the row exactly as stored: {id:1, cust_nm:"Ann"}.');
     settle();
     shipping.push('order 1 → label for Ann ✓');
@@ -846,7 +849,7 @@ export function outboxFrames(mode: OutboxMode): BoardFrame[] {
     step('The orders team renames cust_nm to customer_name. To them it’s a private tidy-up.');
     service = 'insert order 2';
     rows.push({ line: '2 · Bo · 35' });
-    stream.push({ text: '{id:2, customer_name:"Bo"}', tone: 'focus' });
+    stream.push({ text: '{id:2, customer_name:"Bo"}', tone: 'focus', from: 'orders' });
     step('Order 2 is inserted. CDC faithfully publishes the new shape: {id:2, customer_name:"Bo"}.');
     settle();
     failed = true;
@@ -873,7 +876,7 @@ export function outboxFrames(mode: OutboxMode): BoardFrame[] {
   }
   service = 'transaction: order 1';
   rows.push({ line: '1 · Ann · 20' });
-  outbox.push({ text: 'OrderPlaced {customer:"Ann"}', tone: 'focus' });
+  outbox.push({ text: 'OrderPlaced {customer:"Ann"}', tone: 'focus', from: 'service' });
   step('Order 1: one transaction writes the orders row and the outbox event OrderPlaced {customer:"Ann"}.');
   settle();
   stream.push({ text: 'OrderPlaced {customer:"Ann"}', tone: 'focus' });
@@ -885,7 +888,7 @@ export function outboxFrames(mode: OutboxMode): BoardFrame[] {
   step('The orders team renames cust_nm to customer_name — and updates the one line of code that fills in the outbox event. The event’s shape stays the same.');
   service = 'transaction: order 2';
   rows.push({ line: '2 · Bo · 35' });
-  outbox.push({ text: 'OrderPlaced {customer:"Bo"}', tone: 'focus' });
+  outbox.push({ text: 'OrderPlaced {customer:"Bo"}', tone: 'focus', from: 'service' });
   step('Order 2: same transaction, same event shape.');
   settle();
   stream.push({ text: 'OrderPlaced {customer:"Bo"}', tone: 'focus' });
